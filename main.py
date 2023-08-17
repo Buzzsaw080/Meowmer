@@ -4,10 +4,18 @@ import discord
 
 import json
 
+TEST_MODE = True
+# when enabled, instead of sgt.cat everything will go to buzz
+
 TOKEN = "MTEzODkxODMzMjAxNjM3Nzk1OQ.GFPtj2.yJx37uEUW_gvm1M0vftV56VJV3l5AXUfvGFyOU"
 LEADERBOARD_CHANNEL = 1088591989106286612
-REQUEST_CHANNEL = 1138979729207210025
 DATABASE_FILE = "database.json"
+
+if not TEST_MODE:
+    REQUEST_CHANNEL = 987862177266405397
+else:
+    REQUEST_CHANNEL = 203269515981750279
+
 
 intents = discord.Intents.default()
 intents.typing = False
@@ -65,7 +73,7 @@ async def request(interaction, request:str):
     view.originalRequester = interaction.user
     view.requestName = request
 
-    channel = await bot.fetch_user(987862177266405397)
+    channel = await bot.fetch_user(REQUEST_CHANNEL)
     await channel.send(f"<@987862177266405397> i need you, <@{interaction.user.id}> has requested {request}, how many bucks do you want for it?", view=view)
     await interaction.response.send_message("Alright, i'll ask sgt.cat and DM you when a cost is picked")
 
@@ -116,9 +124,12 @@ def read_database():
     print(f"rd database {database}")
     return database
 
-class CostSelector(discord.ui.View): # Create a class called MyView that subclasses discord.ui.View
+class CostSelector(discord.ui.View):
     originalRequester = None
     requestName = "undefined"
+
+    def __init__(self):
+        super().__init__(timeout=None) # make the button last forever, even when meowmer is dead
 
     @discord.ui.select(
         placeholder = "Pick Cost", 
@@ -143,9 +154,44 @@ class CostSelector(discord.ui.View): # Create a class called MyView that subclas
             discord.SelectOption(label="Reject", emoji="❌", description="Reject this request")
         ]
     )
-    async def select_callback(self, interaction, select): # the function called when the user is done selecting options
-        await interaction.response.send_message(f"That pussy probably wont accept that high price of {select.values[0]} but alright")
-        await self.originalRequester.send(f"Sgt.cat decided that your request {self.requestName} would cost {select.values[0]}, do you accept?")
+    async def select_callback(self, interaction, select):
+        select.disabled = True
+        await interaction.response.edit_message(content=f"[Finished] <@{self.originalRequester.id}> requested {self.requestName} and you chose {select.values[0]}",view=None)
+        if not select.values[0] == "Reject":
+            view = CostAcceptor()
+            view.cost = int(select.values[0])
+            view.originalRequester = self.originalRequester
+            view.requestName = self.requestName
+
+            await self.originalRequester.send(f"Sgt.cat decided that your request {self.requestName} would cost {select.values[0]}, do you accept?", view=view)
+        else:
+            await self.originalRequester.send(f"he rejected {self.requestName} lmao cope")
+
+
+class CostAcceptor(discord.ui.View):
+    originalRequester = None
+    requestName = "undefined"
+    cost = 0
+
+    def __init__(self):
+        super().__init__(timeout=None) # make the button last forever, even when meowmer is dead
+
+    @discord.ui.button(label="Accept", style=discord.ButtonStyle.green, emoji="✅")
+    async def yes_callback(self, interaction, button):
+        database = read_database()
+
+        if database["users"][str(self.originalRequester.id)]["balance"] < self.cost:
+            await interaction.response.send_message("you don't have enough money bozo", ephemeral=True)
+            return
+
+        button.disabled = True
+        await interaction.response.edit_message(content=f"Alright! i'll take {self.cost} cat bucks from you now, and sgt.cat will get right on it", view=None)
+
+        database["users"][str(self.originalRequester.id)]["balance"] -= self.cost
+        save_database(database)
+
+        channel = await bot.fetch_user(REQUEST_CHANNEL)
+        await channel.send(f"<@{self.originalRequester.id}> accepted {self.requestName} for {self.cost}, get on it!")
 
 print("Testing database")
 read_database()
