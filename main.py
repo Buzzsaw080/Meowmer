@@ -4,7 +4,7 @@ import discord
 
 import json
 
-TEST_MODE = True
+TEST_MODE = False
 # when enabled, instead of sgt.cat everything will go to buzz
 
 TOKEN = "MTEzODkxODMzMjAxNjM3Nzk1OQ.GFPtj2.yJx37uEUW_gvm1M0vftV56VJV3l5AXUfvGFyOU"
