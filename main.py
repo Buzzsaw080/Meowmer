@@ -2,6 +2,8 @@ from discord.ext import commands
 from discord import app_commands
 import discord
 
+import threading
+import asyncio
 import json
 
 TEST_MODE = False
@@ -29,10 +31,7 @@ else:
         TOKEN = file.read()
 
 
-intents = discord.Intents.default()
-intents.typing = False
-intents.presences = False
-intents.message_content = True
+intents = discord.Intents.none()
 
 logo = [
     "MMMMMMMMMEEEEEEEOOOOOOOOWWWWWWWWWMMMMMMMMMEEEEEEERRRRRRRRR",
@@ -53,8 +52,13 @@ bot = commands.Bot(command_prefix="$",intents=intents)
 @bot.event
 async def on_ready():
     print("Connected to discord")
+
     print("Syncing bot commands")
     await bot.tree.sync()
+
+    loop = asyncio.get_event_loop()
+    loop.create_task(update_leaderboard())
+
     print("All set, sir.")
 
 @bot.tree.command(name="balance", description="Check your cat buck balance")
@@ -102,6 +106,59 @@ async def backup(interaction, filename:str):
     save_database(read_database(),filename)
     await interaction.response.send_message(f"A database backup has been created with the filename {filename}")
 
+async def update_leaderboard():
+    print("Updating leaderboard...")
+
+    database = read_database()
+    userlist = []
+
+    for userid in database["users"].keys():
+        user = await bot.fetch_user(userid)
+        username = user.display_name
+
+        userlist.append([username, database["users"][userid]["balance"]])
+
+    sorted = False
+    while sorted == False:
+
+        previoususer = None
+        sorted = True
+        for index, user in enumerate(userlist):
+
+            if previoususer == None:
+                previoususer = user
+                continue
+            
+            if previoususer[1] <= user[1]:
+                sorted = False
+                userlist[index - 1], userlist[index] = userlist[index], userlist[index - 1] # swap values
+    
+
+    leaderboard = "Leaderboard\n"
+    for index, user in enumerate(userlist):
+        leaderboard += f"#{index + 1} {user[0]} - {user[1]}$\n"
+
+
+    channel = await bot.fetch_channel(LEADERBOARD_CHANNEL)
+    if "leaderboardmessage" in database:
+        print(database["leaderboardmessage"])
+        message = await channel.fetch_message(database["leaderboardmessage"])
+        await message.edit(content=leaderboard)
+    else:
+        print("No leaderboard message present in database, sending a new one!")
+        message = await channel.send(leaderboard)
+        database["leaderboardmessage"] = message.id
+        save_database(database)
+    
+
+    await asyncio.sleep(10)
+    loop = asyncio.get_event_loop()
+    loop.create_task(update_leaderboard())
+
+        
+                
+        
+
 
 def check_user_existance(userid:int):
     database = read_database()
@@ -137,6 +194,14 @@ def read_database():
             exit()
     
     return database
+
+def set_interval(func, sec):
+    async def func_wrapper():
+        await set_interval(func, sec)
+        await func()
+    t = threading.Timer(sec, func_wrapper)
+    t.start()
+    return t
 
 class CostSelector(discord.ui.View):
     originalRequester = None
