@@ -68,6 +68,7 @@ async def balance(interaction):
 async def pay(interaction, amount:int, user:discord.User):
     if (interaction.user.id != 987862177266405397 or interaction.user.id != 203269515981750279):
         interaction.response.send_message("no cheating stinky!", ephemeral=True)
+        return
 
 
     check_user_existance(user.id)
