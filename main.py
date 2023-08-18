@@ -4,7 +4,7 @@ import discord
 
 import json
 
-TEST_MODE = False
+TEST_MODE = True
 # when enabled, instead of sgt.cat everything will go to buzz
 
 
@@ -19,6 +19,9 @@ DATABASE_FILE = "database.json"
 if not TEST_MODE:
     REQUEST_CHANNEL = 987862177266405397
 else:
+    print("====== !! TESTING MODE !! ======")
+    print("Meowmer is currently in testing mode, if you dont want this, make sure you are pulling from the main branch")
+    print("TESTING MODE WILL STOP NORMAL OPERATION!!!")
     REQUEST_CHANNEL = 203269515981750279
 
 
