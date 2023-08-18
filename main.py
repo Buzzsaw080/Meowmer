@@ -125,7 +125,6 @@ def read_database():
     try:
         with open(DATABASE_FILE, 'r') as openfile:
             database = json.load(openfile)
-            print(database)
     except FileNotFoundError:
         print("Database file does not exist!! If updating your bot version, please move the old DATABASE_FILE file to the new folder, otherwise if you want to make a new file type y")
         if input("create new file?") == "y":
@@ -137,7 +136,6 @@ def read_database():
             print("Exiting")
             exit()
     
-    print(f"rd database {database}")
     return database
 
 class CostSelector(discord.ui.View):
