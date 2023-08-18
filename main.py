@@ -4,7 +4,7 @@ import discord
 
 import json
 
-TEST_MODE = True
+TEST_MODE = False
 # when enabled, instead of sgt.cat everything will go to buzz
 
 DATABASE_FILE = "database.json"
@@ -23,7 +23,7 @@ else:
     print("TESTING MODE WILL STOP NORMAL OPERATION!!!")
     sleep(1)
     REQUEST_CHANNEL = 203269515981750279
-    LEADERBOARD_CHANNEL = 1088591989106286612
+    LEADERBOARD_CHANNEL = 1141924571784675421
 
     with open("testingtoken.txt") as file:
         TOKEN = file.read()
