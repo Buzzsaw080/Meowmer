@@ -13,7 +13,7 @@ DATABASE_FILE = "database.json"
 
 if not TEST_MODE:
     REQUEST_CHANNEL = 987862177266405397
-    LEADERBOARD_CHANNEL = 1088591989106286612
+    LEADERBOARD_CHANNEL = 1142215406149447751
 
     with open("token.txt") as file:
         TOKEN = file.read()
