@@ -7,22 +7,26 @@ import json
 TEST_MODE = True
 # when enabled, instead of sgt.cat everything will go to buzz
 
-
-with open("token.txt") as file:
-    TOKEN = file.read()
-
-
-
-LEADERBOARD_CHANNEL = 1088591989106286612
 DATABASE_FILE = "database.json"
 
 if not TEST_MODE:
     REQUEST_CHANNEL = 987862177266405397
+    LEADERBOARD_CHANNEL = 1088591989106286612
+
+    with open("token.txt") as file:
+        TOKEN = file.read()
 else:
+    from time import sleep
+
     print("====== !! TESTING MODE !! ======")
     print("Meowmer is currently in testing mode, if you dont want this, make sure you are pulling from the main branch")
     print("TESTING MODE WILL STOP NORMAL OPERATION!!!")
+    sleep(1)
     REQUEST_CHANNEL = 203269515981750279
+    LEADERBOARD_CHANNEL = 1088591989106286612
+
+    with open("testingtoken.txt") as file:
+        TOKEN = file.read()
 
 
 intents = discord.Intents.default()
@@ -63,6 +67,8 @@ async def balance(interaction):
 @bot.tree.command(name="pay", description="Add funds to a user")
 async def pay(interaction, amount:int, user:discord.User):
     
+
+
     check_user_existance(user.id)
     database = read_database() 
 
