@@ -4,7 +4,7 @@ import discord
 
 import json
 
-TEST_MODE = False
+TEST_MODE = True
 # when enabled, instead of sgt.cat everything will go to buzz
 
 DATABASE_FILE = "database.json"
@@ -29,10 +29,7 @@ else:
         TOKEN = file.read()
 
 
-intents = discord.Intents.default()
-intents.typing = False
-intents.presences = False
-intents.message_content = True
+intents = discord.Intents.none()
 
 logo = [
     "MMMMMMMMMEEEEEEEOOOOOOOOWWWWWWWWWMMMMMMMMMEEEEEEERRRRRRRRR",
@@ -101,6 +98,43 @@ async def database(interaction):
 async def backup(interaction, filename:str):
     save_database(read_database(),filename)
     await interaction.response.send_message(f"A database backup has been created with the filename {filename}")
+
+@bot.tree.command(name="updateleaderboard",description="TESTING ONLY!!! DONT USE ITS AUTOMATIC")
+async def update_leaderboard(interaction):
+    print("Updating leaderboard...")
+
+    database = read_database()
+    userlist = []
+
+    for userid in database["users"].keys():
+        user = await bot.fetch_user(userid)
+        username = user.display_name
+
+        userlist.append([username, database["users"][userid]["balance"]])
+
+    sorted = False
+    while sorted == False:
+
+        previoususer = None
+        sorted = True
+        for index, user in enumerate(userlist):
+
+            if previoususer == None:
+                previoususer = user
+                continue
+            
+            if previoususer[1] <= user[1]:
+                sorted = False
+                userlist[index - 1], userlist[index] = userlist[index], userlist[index - 1] # swap values
+    
+
+    leaderboard = "Leaderboard\n"
+    for index, user in enumerate(userlist):
+        leaderboard += f"#{index + 1} {user[0]} - {user[1]}$\n"
+
+    await interaction.response.send_message(leaderboard)
+                
+        
 
 
 def check_user_existance(userid:int):
