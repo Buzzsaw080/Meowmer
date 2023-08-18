@@ -66,7 +66,8 @@ async def balance(interaction):
 
 @bot.tree.command(name="pay", description="Add funds to a user")
 async def pay(interaction, amount:int, user:discord.User):
-    
+    if (interaction.user.id != 987862177266405397 or interaction.user.id != 203269515981750279):
+        interaction.response.send_message("no cheating stinky!", ephemeral=True)
 
 
     check_user_existance(user.id)
@@ -75,7 +76,7 @@ async def pay(interaction, amount:int, user:discord.User):
     database["users"][str(user.id)]["balance"] += amount
     save_database(database)
 
-    await interaction.response.send_message(f"You paid <@{user.id}> {amount} cat bucks, their balance is now {database['users'][str(user.id)]['balance']}")
+    await interaction.response.send_message(f"You p987862177266405397aid <@{user.id}> {amount} cat bucks, their balance is now {database['users'][str(user.id)]['balance']}")
 
 @bot.tree.command(name="request", description="Request to spend your bucks for sgt.cat to do something")
 async def request(interaction, request:str):
