@@ -151,7 +151,7 @@ async def update_leaderboard():
         save_database(database)
     
 
-    await asyncio.sleep(10)
+    await asyncio.sleep(60)
     loop = asyncio.get_event_loop()
     loop.create_task(update_leaderboard())
 
