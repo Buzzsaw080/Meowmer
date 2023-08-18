@@ -7,7 +7,12 @@ import json
 TEST_MODE = False
 # when enabled, instead of sgt.cat everything will go to buzz
 
-TOKEN = "MTEzODkxODMzMjAxNjM3Nzk1OQ.GFPtj2.yJx37uEUW_gvm1M0vftV56VJV3l5AXUfvGFyOU"
+
+with open("token.txt") as file:
+    TOKEN = file.read()
+
+
+
 LEADERBOARD_CHANNEL = 1088591989106286612
 DATABASE_FILE = "database.json"
 

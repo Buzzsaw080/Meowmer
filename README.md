@@ -8,6 +8,8 @@ first install python
 then install the dependencies
 	- run in terminal "pip install discord.py"
 
+then put the bot token into token.txt (make sure there is nothing else)
+
 then run python main.py in this folder in terminals
 
 ur all good!!!!!!!!!!!!!!!!!
