@@ -77,7 +77,7 @@ async def pay(interaction, amount:int, user:discord.User):
     database["users"][str(user.id)]["balance"] += amount
     save_database(database)
 
-    await interaction.response.send_message(f"You p987862177266405397aid <@{user.id}> {amount} cat bucks, their balance is now {database['users'][str(user.id)]['balance']}")
+    await interaction.response.send_message(f"You paid <@{user.id}> {amount} cat bucks, their balance is now {database['users'][str(user.id)]['balance']}")
 
 @bot.tree.command(name="request", description="Request to spend your bucks for sgt.cat to do something")
 async def request(interaction, request:str):
