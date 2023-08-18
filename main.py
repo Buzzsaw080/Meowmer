@@ -66,7 +66,7 @@ async def balance(interaction):
 
 @bot.tree.command(name="pay", description="Add funds to a user")
 async def pay(interaction, amount:int, user:discord.User):
-    if (interaction.user.id != 987862177266405397 or interaction.user.id != 203269515981750279):
+    if (interaction.user.id != 987862177266405397 and interaction.user.id != 203269515981750279):
         await interaction.response.send_message("no cheating stinky!", ephemeral=True)
         return
 
