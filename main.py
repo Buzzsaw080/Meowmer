@@ -127,9 +127,9 @@ async def update_leaderboard():
                 nlist[i] = nlist[i+1]
                 nlist[i+1] = temp
     
-
+    nlist.reverse()
     leaderboard = "Leaderboard\n"
-    for index, user in enumerate(userlist):
+    for index, user in enumerate(nlist):
         leaderboard += f"#{index + 1} {user[0]} - {user[1]}$\n"
 
 
