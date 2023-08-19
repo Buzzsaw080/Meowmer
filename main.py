@@ -117,21 +117,13 @@ async def update_leaderboard():
         username = user.display_name
 
         userlist.append([username, database["users"][userid]["balance"]])
-
-    sorted = False
-    while sorted == False:
-
-        previoususer = None
-        sorted = True
-        for index, user in enumerate(userlist):
-
-            if previoususer == None:
-                previoususer = user
-                continue
-            
-            if previoususer[1] <= user[1]:
-                sorted = False
-                userlist[index - 1], userlist[index] = userlist[index], userlist[index - 1] # swap values
+        
+    for passnum in range(len(nlist)-1,0,-1):
+        for i in range(passnum):
+            if nlist[i][1]>nlist[i+1][1]:
+                temp = nlist[i]
+                nlist[i] = nlist[i+1]
+                nlist[i+1] = temp
     
 
     leaderboard = "Leaderboard\n"
