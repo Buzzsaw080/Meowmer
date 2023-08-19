@@ -117,7 +117,9 @@ async def update_leaderboard():
         username = user.display_name
 
         userlist.append([username, database["users"][userid]["balance"]])
-        
+
+    nlist = userlist
+    # when tou have access to pc fix thisall!!!
     for passnum in range(len(nlist)-1,0,-1):
         for i in range(passnum):
             if nlist[i][1]>nlist[i+1][1]:
