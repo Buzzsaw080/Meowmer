@@ -68,6 +68,15 @@ async def balance(interaction):
 
     await interaction.response.send_message(f"Your balance is {database['users'][str(interaction.user.id)]['balance']}")
 
+@bot.tree.command(name="say", description="what")
+async def pay(interaction, words:str):
+    if (interaction.user.id != 987862177266405397 and interaction.user.id != 203269515981750279):
+        await interaction.response.send_message("kys NOW!", ephemeral=True)
+        return
+
+    await interaction.response.send_message("ok", ephemeral=True)
+    await interaction.channel.send(words)
+
 @bot.tree.command(name="pay", description="Add funds to a user")
 async def pay(interaction, amount:int, user:discord.User):
     if (interaction.user.id != 987862177266405397 and interaction.user.id != 203269515981750279):
