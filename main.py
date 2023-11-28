@@ -151,7 +151,8 @@ async def update_leaderboard():
     leaderboard = "Leaderboard\n"
     total = 0
     for index, user in enumerate(nlist):
-        leaderboard += f"#{index + 1} {user[0]} - {user[1]}$\n"
+        if user[1] != 0:
+            leaderboard += f"#{index + 1} {user[0]} - {user[1]}$\n"
         total += user[1]
     leaderboard += f"/nTotal - {total}"
 
