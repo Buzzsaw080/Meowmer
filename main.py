@@ -69,7 +69,7 @@ async def balance(interaction):
     await interaction.response.send_message(f"Your balance is {database['users'][str(interaction.user.id)]['balance']}")
 
 @bot.tree.command(name="say", description="what")
-async def pay(interaction, words:str):
+async def say(interaction, words:str):
     if (interaction.user.id != 987862177266405397 and interaction.user.id != 203269515981750279):
         await interaction.response.send_message("kys NOW!", ephemeral=True)
         return
@@ -79,16 +79,25 @@ async def pay(interaction, words:str):
 
 @bot.tree.command(name="pay", description="Add funds to a user")
 async def pay(interaction, amount:int, user:discord.User):
-    if (interaction.user.id != 987862177266405397 and interaction.user.id != 203269515981750279):
-        await interaction.response.send_message("no cheating stinky!", ephemeral=True)
-	else:
-        check_user_existance(user.id)
-        database = read_database() 
+    check_user_existance(user.id)
+    check_user_existance(interaction.user.id)
+    database = read_database() 
 
+    if (interaction.user.id != REQUEST_CHANNEL):
+	if database["users"][str(interaction.user.id)]["balance"] >= amount:
+	    database["users"][str(interaction.user.id)]["balance"] -= amount
+            database["users"][str(user.id)]["balance"] += amount
+	    await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {database["users"][str(user.id)]["balance"]} and you have {database["users"][str(interaction.user.id)]["balance"]}")
+        else:
+            await interaction.response.send_message(f"You're too broke to send {amount}$, you only have {database["users"][str(interaction.user.id)]["balance"]}")
+            return
+    else:
+        
         database["users"][str(user.id)]["balance"] += amount
-        save_database(database)
+        
+        await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {database["users"][str(user.id)]["balance"]} (no money was taken bc of how cool you are)")
+    save_database(database)
 
-        await interaction.response.send_message(f"You paid <@{user.id}> {amount} cat bucks, their balance is now {database['users'][str(user.id)]['balance']}")
 
 @bot.tree.command(name="request", description="Request to spend your bucks for sgt.cat to do something")
 async def request(interaction, request:str):
