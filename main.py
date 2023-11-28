@@ -84,18 +84,18 @@ async def pay(interaction, amount:int, user:discord.User):
     database = read_database() 
 
     if (interaction.user.id != REQUEST_CHANNEL):
-	if database["users"][str(interaction.user.id)]["balance"] >= amount:
-	    database["users"][str(interaction.user.id)]["balance"] -= amount
+        if database["users"][str(interaction.user.id)]["balance"] >= amount:
+            database["users"][str(interaction.user.id)]["balance"] -= amount
             database["users"][str(user.id)]["balance"] += amount
-	    await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {database["users"][str(user.id)]["balance"]} and you have {database["users"][str(interaction.user.id)]["balance"]}")
+            await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {database['users'][str(user.id)]['balance']} and you have {database['users'][str(interaction.user.id)]['balance']}")
         else:
-            await interaction.response.send_message(f"You're too broke to send {amount}$, you only have {database["users"][str(interaction.user.id)]["balance"]}")
+            await interaction.response.send_message(f"You're too broke to send {amount}$, you only have {database['users'][str(interaction.user.id)]['balance']}")
             return
     else:
         
         database["users"][str(user.id)]["balance"] += amount
         
-        await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {database["users"][str(user.id)]["balance"]} (no money was taken bc of how cool you are)")
+        await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {database['users'][str(user.id)]['balance']} (no money was taken bc of how cool you are)")
     save_database(database)
 
 
