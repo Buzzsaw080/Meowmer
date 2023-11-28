@@ -154,7 +154,7 @@ async def update_leaderboard():
         if user[1] != 0:
             leaderboard += f"#{index + 1} {user[0]} - {user[1]}$\n"
         total += user[1]
-    leaderboard += f"/nTotal - {total}"
+    leaderboard += f"\nTotal - {total}"
 
     channel = await bot.fetch_channel(LEADERBOARD_CHANNEL)
     if "leaderboardmessage" in database:
