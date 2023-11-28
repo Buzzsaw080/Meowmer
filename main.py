@@ -131,11 +131,11 @@ async def update_leaderboard():
 
     database = read_database()
     userlist = []
-
+    total = 0
     for userid in database["users"].keys():
         user = await bot.fetch_user(userid)
         username = user.display_name
-
+        total += database["users"][userid]["balance"]]
         userlist.append([username, database["users"][userid]["balance"]])
 
     nlist = userlist
@@ -148,13 +148,12 @@ async def update_leaderboard():
                 nlist[i+1] = temp
     
     nlist.reverse()
-    leaderboard = "Leaderboard\n"
-    total = 0
+    leaderboard = f"# Leaderboard\nTotal - {total}\n\n"
+    
     for index, user in enumerate(nlist):
         if user[1] != 0:
             leaderboard += f"#{index + 1} {user[0]} - {user[1]}$\n"
         total += user[1]
-    leaderboard += f"\nTotal - {total}"
 
     channel = await bot.fetch_channel(LEADERBOARD_CHANNEL)
     if "leaderboardmessage" in database:
