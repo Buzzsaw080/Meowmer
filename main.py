@@ -84,7 +84,7 @@ async def pay(interaction, amount:int, user:discord.User):
     database = read_database() 
 
     if (interaction.user.id != REQUEST_CHANNEL):
-	if database["userss"][str(interaction.user.id)]["balance"] >= amount:
+	if database["users"][str(interaction.user.id)]["balance"] >= amount:
 	    database["users"][str(interaction.user.id)]["balance"] -= amount
             database["users"][str(user.id)]["balance"] += amount
 	    await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {database["users"][str(user.id)]["balance"]} and you have {database["users"][str(interaction.user.id)]["balance"]}")
