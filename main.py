@@ -248,16 +248,6 @@ class CostSelector(discord.ui.View):
             discord.SelectOption(label="40"),
             discord.SelectOption(label="50"),
             discord.SelectOption(label="100"),
-            discord.SelectOption(label="150"),
-            discord.SelectOption(label="200"),
-            discord.SelectOption(label="300"),
-            discord.SelectOption(label="400"),
-            discord.SelectOption(label="500"),
-            discord.SelectOption(label="600"),
-            discord.SelectOption(label="700"),
-            discord.SelectOption(label="800"),
-            discord.SelectOption(label="900"),
-            discord.SelectOption(label="1000"),
             discord.SelectOption(label="Reject", emoji="❌", description="Reject this request")
         ]
     )
