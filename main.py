@@ -252,15 +252,17 @@ class CostSelector(discord.ui.View):
     async def select_callback(self, interaction, select):
         select.disabled = True
         await interaction.response.edit_message(content=f"[Finished] <@{self.originalRequester.id}> requested {self.requestName} and you chose {select.values[0]}",view=None)
-        if not select.values[0] == "Reject":
+        if not select.values[0] in ["Reject","Free"]:
             view = CostAcceptor()
             view.cost = int(select.values[0])
             view.originalRequester = self.originalRequester
             view.requestName = self.requestName
 
             await self.originalRequester.send(f"Sgt.cat decided that your request {self.requestName} would cost {select.values[0]}, do you accept?", view=view)
-        else:
+        elif select.values[0] == "Reject":
             await self.originalRequester.send(f"he rejected {self.requestName} lmao cope")
+        elif select.values[0] == "Free":
+            await self.originalRequester.send(f"Sgt.cat decided to do {self.requestName} for free!... he was a little too eager though...")
 
 
 class CostAcceptor(discord.ui.View):
