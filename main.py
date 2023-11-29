@@ -8,6 +8,7 @@ import json
 
 TEST_MODE = False
 # when enabled, instead of sgt.cat everything will go to buzz
+# Startup -----------------------------------------------------------------
 
 DATABASE_FILE = "database.json"
 
@@ -60,7 +61,9 @@ async def on_ready():
     loop.create_task(update_leaderboard())
 
     print("All set, sir.")
+# Commands ------------------------------------------------------------------------------------
 
+# Balance command -----------------
 @bot.tree.command(name="balance", description="Check your cat buck balance")
 async def balance(interaction):
     check_user_existance(interaction.user.id)
@@ -68,65 +71,70 @@ async def balance(interaction):
 
     await interaction.response.send_message(f"Your balance is {database['users'][str(interaction.user.id)]['balance']}")
 
-@bot.tree.command(name="say", description="what")
+# Say command ---------------------
+@bot.tree.command(name="say", description="Make me say anything")
 async def say(interaction, words:str):
     if (interaction.user.id != 987862177266405397 and interaction.user.id != 203269515981750279):
-        await interaction.response.send_message("kys NOW!", ephemeral=True)
-        return
+        await interaction.response.send_message("kys (keep yourself safe) NOW!", ephemeral=True)
+        return # Buzz wtf is this and who is it attached to? o-O
 
-    await interaction.response.send_message("ok", ephemeral=True)
+    await interaction.response.send_message("okay", ephemeral=True)
     await interaction.channel.send(words)
 
-@bot.tree.command(name="pay", description="Add funds to a user")
+#Pay command ----------------------
+@bot.tree.command(name="pay", description="Give funds to a user")
 async def pay(interaction, amount:int, user:discord.User):
     check_user_existance(user.id)
     check_user_existance(interaction.user.id)
     database = read_database() 
-
+    # Negative cash response/math
     if (interaction.user.id != REQUEST_CHANNEL):
         if amount < 0:
-            await interaction.response.send_message("uhmm that would be robbery")
+            await interaction.response.send_message("uhm, that would be robbery. you dont want to go to jail do you?")
             return
+        # Have cash response/math
+        if database["users"][str(interaction.user.id)]["balance"] >= amount: # Not enough money math. see response2
+            database["users"][str(interaction.user.id)]["balance"] -= amount # Subtraction of money. see response1
+            database["users"][str(user.id)]["balance"] += amount # Adding of money. see response1
+            await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {database['users'][str(user.id)]['balance']}$ and you have {database['users'][str(interaction.user.id)]['balance']}$") # Response1 ---
+        else: # Not enough cash response
+            await interaction.response.send_message(f"You're too BROKE to send {amount}$, you only have {database['users'][str(interaction.user.id)]['balance']}$ silly") # Response2
+            return        
+    else: # God gives money response/math
         
-        if database["users"][str(interaction.user.id)]["balance"] >= amount:
-            database["users"][str(interaction.user.id)]["balance"] -= amount
-            database["users"][str(user.id)]["balance"] += amount
-            await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {database['users'][str(user.id)]['balance']} and you have {database['users'][str(interaction.user.id)]['balance']}")
-        else:
-            await interaction.response.send_message(f"You're too broke to send {amount}$, you only have {database['users'][str(interaction.user.id)]['balance']}")
-            return
-    else:
+        database["users"][str(user.id)]["balance"] += amount # Adding money from god. see response3
         
-        database["users"][str(user.id)]["balance"] += amount
-        
-        await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {database['users'][str(user.id)]['balance']} (no money was taken bc of how cool you are)")
-    save_database(database)
+        await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {database['users'][str(user.id)]['balance']}$ (no money was taken because you own the system)")
+    save_database(database) # Response3
 
-
-@bot.tree.command(name="request", description="Request to spend your bucks for sgt.cat to do something")
+# Request command --------------------
+@bot.tree.command(name="request", description="Request to spend your bucks for Sgt.Cat to do something")
 async def request(interaction, request:str):
     if "@everyone" in request:
-        interaction.response.send_message("you can't @ everyone stupid",ephemeral=True)
+        interaction.response.send_message("you can't @ everyone D:",ephemeral=True)
 
-
+    # Behind the scenes
     view = CostSelector()
-    view.originalRequester = interaction.user
-    view.requestName = request
-
+    view.originalRequester = interaction.user # The person who requested
+    view.requestName = request # Defining/Grabbing the request
+    # Action
     channel = await bot.fetch_user(REQUEST_CHANNEL)
-    await channel.send(f"<@987862177266405397> i need you, <@{interaction.user.id}> has requested {request}, how many bucks do you want for it?", view=view)
-    await interaction.response.send_message("Alright, i'll ask sgt.cat and DM you when a cost is picked")
+    await channel.send(f"<@987862177266405397> i need you, <@{interaction.user.id}> has requested {request}. How many big fat sexy bucks do you want for it? ;3", view=view) # Messaging Sgt.Cat
+    await interaction.response.send_message("Alright, i'll ask Sgt.Cat and DM you when he picks a price") # Letting the user know Sgt Cat has been messaged
 
+# Database command -------------------
 @bot.tree.command(name="database", description="read the database")
 async def database(interaction):
-    await interaction.response.send_message(str(read_database()))
+    await interaction.response.send_message(str(read_database())) # Reads the database
 
+#Backup command ----------------------
 @bot.tree.command(name="backup",description="create a database backup")
 async def backup(interaction, filename:str):
     save_database(read_database(),filename)
     await interaction.response.send_message(f"A database backup has been created with the filename {filename}")
 
-async def update_leaderboard():
+# Updating the leaderboard duh --------------------------------------------------
+async def update_leaderboard(): # Loop start
     print("Updating leaderboard...")
 
     database = read_database()
@@ -135,11 +143,11 @@ async def update_leaderboard():
     for userid in database["users"].keys():
         user = await bot.fetch_user(userid)
         username = user.display_name
-        total += database["users"][userid]["balance"]]
+        total += database["users"][userid]["balance"]
         userlist.append([username, database["users"][userid]["balance"]])
 
     nlist = userlist
-    # when tou have access to pc fix thisall!!!
+    # bro probably did not fix this :skull: and if he did he forgot to remove the messsage
     for passnum in range(len(nlist)-1,0,-1):
         for i in range(passnum):
             if nlist[i][1]>nlist[i+1][1]:
@@ -167,15 +175,15 @@ async def update_leaderboard():
         save_database(database)
     
 
-    await asyncio.sleep(60)
+    await asyncio.sleep(30) # how often the leaderboard updates
     loop = asyncio.get_event_loop()
     loop.create_task(update_leaderboard())
 
-        
+        # Loop end
                 
-        
+        # Other Stuff ------------------------------------------------
 
-
+# Checking for existence of a user -----------
 def check_user_existance(userid:int):
     database = read_database()
 
@@ -187,13 +195,13 @@ def check_user_existance(userid:int):
     database["users"][str(userid)] = {"balance":0}
 
     save_database(database)
-
+# Database saving proccess ---------------------------
 def save_database(database, filename=DATABASE_FILE):
     print("Saving database... do not close")
     with open(filename, 'w') as openfile:
         json.dump(database,openfile, indent=3)
     print("Database save complete")
-
+# Database file error -----------------------
 def read_database():
     try:
         with open(DATABASE_FILE, 'r') as openfile:
@@ -208,29 +216,23 @@ def read_database():
         else:
             print("Exiting")
             exit()
-    
+    # No clue what this is -----------------
     return database
 
-def set_interval(func, sec):
-    async def func_wrapper():
-        await set_interval(func, sec)
-        await func()
-    t = threading.Timer(sec, func_wrapper)
-    t.start()
-    return t
-
+# Request command button options. see request command for details
 class CostSelector(discord.ui.View):
     originalRequester = None
     requestName = "undefined"
 
     def __init__(self):
         super().__init__(timeout=None) # make the button last forever, even when meowmer is dead
-
+    # Sgt.Cats options for price
     @discord.ui.select(
         placeholder = "Pick Cost", 
         min_values = 1, 
         max_values = 1, 
         options = [ 
+            discord.SelectOption(label="Free", description="Give it to them for free"), # Fuck i scrolled down and saw that if it wasnt a value it would just be reject. pwetty pwease code dis in buzz uwu x3 *cums*
             discord.SelectOption(label="1"),
             discord.SelectOption(label="2"),
             discord.SelectOption(label="3"),
@@ -246,6 +248,16 @@ class CostSelector(discord.ui.View):
             discord.SelectOption(label="40"),
             discord.SelectOption(label="50"),
             discord.SelectOption(label="100"),
+            discord.SelectOption(label="150"),
+            discord.SelectOption(label="200"),
+            discord.SelectOption(label="300"),
+            discord.SelectOption(label="400"),
+            discord.SelectOption(label="500"),
+            discord.SelectOption(label="600"),
+            discord.SelectOption(label="700"),
+            discord.SelectOption(label="800"),
+            discord.SelectOption(label="900"),
+            discord.SelectOption(label="1000"),
             discord.SelectOption(label="Reject", emoji="❌", description="Reject this request")
         ]
     )
@@ -264,7 +276,6 @@ class CostSelector(discord.ui.View):
         elif select.values[0] == "Free":
             await self.originalRequester.send(f"Sgt.cat decided to do {self.requestName} for free!... he was a little too eager though...")
 
-
 class CostAcceptor(discord.ui.View):
     originalRequester = None
     requestName = "undefined"
@@ -282,7 +293,7 @@ class CostAcceptor(discord.ui.View):
             return
 
         button.disabled = True
-        await interaction.response.edit_message(content=f"Alright! i'll take {self.cost} cat bucks from you now, and sgt.cat will get right on it", view=None)
+        await interaction.response.edit_message(content=f"Alright! *yoinks {self.cost}$ cat bucks* sgt.cat will get right on it", view=None)
 
         database["users"][str(self.originalRequester.id)]["balance"] -= self.cost
         save_database(database)
