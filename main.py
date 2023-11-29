@@ -273,7 +273,6 @@ class CostSelector(discord.ui.View):
             await self.originalRequester.send(f"Sgt.cat decided that your request {self.requestName} would cost {select.values[0]}, do you accept?", view=view)
         else:
             await self.originalRequester.send(f"he rejected {self.requestName} lmao cope")
-# im basically done rigghhttt? okay seeya B)
 
 class CostAcceptor(discord.ui.View):
     originalRequester = None
