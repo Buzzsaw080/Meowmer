@@ -6,7 +6,8 @@ import threading
 import asyncio
 import json
 
-TEST_MODE = False
+CIRCULATION_LIMIT = 100
+TEST_MODE = True
 # when enabled, instead of sgt.cat everything will go to buzz
 # Startup -----------------------------------------------------------------
 
@@ -156,7 +157,11 @@ async def update_leaderboard(): # Loop start
                 nlist[i+1] = temp
     
     nlist.reverse()
-    leaderboard = f"# Leaderboard\nTotal - {total}\n\n"
+    leaderboard = f"# Leaderboard\nTotal - {total}/{CIRCULATION_LIMIT} "
+    if total >= CIRCULATION_LIMIT:
+        leaderboard += "⚠️"
+
+    leaderboard += "\n\n"
     
     for index, user in enumerate(nlist):
         if user[1] != 0:
