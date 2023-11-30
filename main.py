@@ -184,9 +184,6 @@ async def update_leaderboard(): # Loop start
     loop = asyncio.get_event_loop()
     loop.create_task(update_leaderboard())
 
-        # Loop end
-                
-        # Other Stuff ------------------------------------------------
 
 # Checking for existence of a user -----------
 def check_user_existance(userid:int):
@@ -200,6 +197,10 @@ def check_user_existance(userid:int):
     database["users"][str(userid)] = {"balance":0}
 
     save_database(database)
+
+def get_user_balance(userid):
+    return database["users"][str(userid)]["balance"]
+
 # Database saving proccess ---------------------------
 def save_database(database, filename=DATABASE_FILE):
     print("Saving database... do not close")
@@ -211,7 +212,7 @@ def read_database():
     try:
         with open(DATABASE_FILE, 'r') as openfile:
             database = json.load(openfile)
-    except FileNotFoundError:
+    except FileNotFoundError: # If database file does not exist, offer to create a new one
         print("Database file does not exist!! If updating your bot version, please move the old DATABASE_FILE file to the new folder, otherwise if you want to make a new file type y")
         if input("create new file?") == "y":
             with open(DATABASE_FILE, 'x') as openfile:
@@ -221,7 +222,8 @@ def read_database():
         else:
             print("Exiting")
             exit()
-    # No clue what this is -----------------
+
+
     return database
 
 # Request command button options. see request command for details
