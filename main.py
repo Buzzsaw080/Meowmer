@@ -2,7 +2,7 @@ from discord.ext import commands
 from discord import app_commands
 import discord
 
-import threading
+from random import randint
 import asyncio
 import json
 
@@ -185,6 +185,25 @@ async def update_leaderboard(): # Loop start
     loop.create_task(update_leaderboard())
 
 
+#TODO: make opponent optional, so you can make a public challenge
+@bot.tree.command(name="coinflip",description="Challenge someone to a coinflip")
+async def coinflip(interaction,stakes:int,opponent:discord.User):
+    if get_user_balance(interaction.user.id) < stakes:
+        await interaction.response.send_message(f"sorry buddy, i can't hand out loans for gambling, and you only have {get_user_balance(interaction.user.id)}$",ephemeral=True)
+        return
+    elif get_user_balance(opponent.id) < stakes:
+        await interaction.response.send_message(f"your opponent is too broke for the stakes you put, they only have {get_user_balance(opponent.id)}")
+        return
+
+    view = GamblingAcceptor()
+    view.requester = interaction.user
+    view.opponent = opponent
+    view.gambleName = "coinflip"
+    view.stakes = stakes
+
+    await interaction.response.send_message(f"<@{opponent.id}>, <@{interaction.user.id}> is challenging you to a coin flip!\nstakes: {stakes}$",view=view)
+
+
 # Checking for existence of a user -----------
 def check_user_existance(userid:int):
     database = read_database()
@@ -237,6 +256,38 @@ def read_database():
 
 
     return database
+
+class GamblingAcceptor(discord.ui.View):
+    requester = None
+    opponent = None
+    gambleName = "undefined"
+    stakes = 0
+
+    def __init__(self):
+        super().__init__(timeout=30) # make the button last 30 seconds
+
+    @discord.ui.button(label="Accept", style=discord.ButtonStyle.green, emoji="💪")
+    async def accept_callback(self, interaction, button):
+
+        if interaction.user.id != self.opponent.id:
+            await interaction.response.send_message("buddy this challenge aint for you", ephemeral=True)
+            return
+        
+        button.disabled = True
+
+        if randint(0,1) == 0:
+            result = f"<@{self.opponent.id}> won! +{self.stakes}$ for <@{self.requester.id}>, -{self.stakes}$ for <@{self.opponent.id}>"
+            transfer_user_funds(self.opponent.id,self.stakes,self.requester.id)
+        else:
+            result = f"<@{self.requester.id}> won! -{self.stakes}$ for <@{self.requester.id}>, +{self.stakes}$ for <@{self.opponent.id}>"
+            transfer_user_funds(self.opponent.id,self.stakes,self.requester.id)
+        
+        result += f"\n<@{self.requester.id}> now has {get_user_balance(self.requester.id)},"
+        result += f"\n<@{self.opponent.id}> now has {get_user_balance(self.opponent.id)}."
+
+        await interaction.response.send_message(f"<@{self.opponent.id}> accepted the {self.gambleName} and... \n{result}")
+        
+
 
 # Request command button options. see request command for details
 class CostSelector(discord.ui.View):
