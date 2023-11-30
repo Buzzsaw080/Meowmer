@@ -68,9 +68,9 @@ async def on_ready():
 @bot.tree.command(name="balance", description="Check your cat buck balance")
 async def balance(interaction):
     check_user_existance(interaction.user.id)
-    database = read_database()
+    balance = get_user_balance(interaction.user.id)
 
-    await interaction.response.send_message(f"Your balance is {database['users'][str(interaction.user.id)]['balance']}")
+    await interaction.response.send_message(f"Your balance is {balance}")
 
 # Say command ---------------------
 @bot.tree.command(name="say", description="Make me say anything")
@@ -94,16 +94,15 @@ async def pay(interaction, amount:int, user:discord.User):
             await interaction.response.send_message("uhm, that would be robbery. you dont want to go to jail do you?")
             return
         # Have cash response/math
-        if database["users"][str(interaction.user.id)]["balance"] >= amount: # Not enough money math. see response2
-            database["users"][str(interaction.user.id)]["balance"] -= amount # Subtraction of money. see response1
-            database["users"][str(user.id)]["balance"] += amount # Adding of money. see response1
+        if get_user_balance(interaction.user.id) >= amount: # Not enough money math. see response2
+            transfer_user_funds(user,amount,sender=interaction.user.id)
             await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {database['users'][str(user.id)]['balance']}$ and you have {database['users'][str(interaction.user.id)]['balance']}$") # Response1 ---
         else: # Not enough cash response
             await interaction.response.send_message(f"You're too BROKE to send {amount}$, you only have {database['users'][str(interaction.user.id)]['balance']}$ silly") # Response2
             return        
     else: # God gives money response/math
         
-        database["users"][str(user.id)]["balance"] += amount # Adding money from god. see response3
+        transfer_user_funds(user,amount) # Adding money from god. see response3
         
         await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {database['users'][str(user.id)]['balance']}$ (no money was taken because you own the system)")
     save_database(database) # Response3
@@ -122,7 +121,7 @@ async def request(interaction, request:str):
     channel = await bot.fetch_user(REQUEST_CHANNEL)
     await channel.send(f"<@987862177266405397> i need you, <@{interaction.user.id}> has requested {request}. How many big fat sexy bucks do you want for it? ;3", view=view) # Messaging Sgt.Cat
     await interaction.response.send_message("Alright, i'll ask Sgt.Cat and DM you when he picks a price") # Letting the user know Sgt Cat has been messaged
-
+ 
 # Database command -------------------
 @bot.tree.command(name="database", description="read the database")
 async def database(interaction):
@@ -144,8 +143,8 @@ async def update_leaderboard(): # Loop start
     for userid in database["users"].keys():
         user = await bot.fetch_user(userid)
         username = user.display_name
-        total += database["users"][userid]["balance"]
-        userlist.append([username, database["users"][userid]["balance"]])
+        total += get_user_balance(userid)
+        userlist.append([username, get_user_balance(userid)])
 
     nlist = userlist
     # bro probably did not fix this :skull: and if he did he forgot to remove the messsage
@@ -199,7 +198,15 @@ def check_user_existance(userid:int):
     save_database(database)
 
 def get_user_balance(userid):
+    database = read_database()
     return database["users"][str(userid)]["balance"]
+
+def transfer_user_funds(reciever,amount,sender=None):
+    if sender: # If there's a sender
+        database["users"][str(sender)]["balance"] -= amount # Remove money from sender
+
+
+    database["users"][str(reciever)]["balance"] += amount # Add money to reciever
 
 # Database saving proccess ---------------------------
 def save_database(database, filename=DATABASE_FILE):
