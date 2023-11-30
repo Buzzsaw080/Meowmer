@@ -202,6 +202,8 @@ def get_user_balance(userid):
     return database["users"][str(userid)]["balance"]
 
 def transfer_user_funds(reciever,amount,sender=None):
+    database = read_database()
+
     if sender: # If there's a sender
         database["users"][str(sender)]["balance"] -= amount # Remove money from sender
 
