@@ -87,7 +87,7 @@ async def say(interaction, words:str):
 async def pay(interaction, amount:int, user:discord.User):
     check_user_existance(user.id)
     check_user_existance(interaction.user.id)
-    database = read_database() 
+
     # Negative cash response/math
     if (interaction.user.id != REQUEST_CHANNEL):
         if amount < 0:
@@ -95,17 +95,18 @@ async def pay(interaction, amount:int, user:discord.User):
             return
         # Have cash response/math
         if get_user_balance(interaction.user.id) >= amount: # Not enough money math. see response2
-            transfer_user_funds(user,amount,sender=interaction.user.id)
-            await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {database['users'][str(user.id)]['balance']}$ and you have {database['users'][str(interaction.user.id)]['balance']}$") # Response1 ---
+            transfer_user_funds(user.id,amount,sender=interaction.user.id)
+
+            await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {get_user_balance(user.id)}$ and you have {get_user_balance(interaction.user.id)}$") # Response1 ---
         else: # Not enough cash response
             await interaction.response.send_message(f"You're too BROKE to send {amount}$, you only have {database['users'][str(interaction.user.id)]['balance']}$ silly") # Response2
             return        
     else: # God gives money response/math
         
-        transfer_user_funds(user,amount) # Adding money from god. see response3
+        transfer_user_funds(user.id,amount) # Adding money from god. see response3
         
-        await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {database['users'][str(user.id)]['balance']}$ (no money was taken because you own the system)")
-    save_database(database) # Response3
+        await interaction.response.send_message(f"You sent {amount}$ to <@{user.id}> they now have {get_user_balance(user.id)}$ (no money was taken because you own the system)")
+
 
 # Request command --------------------
 @bot.tree.command(name="request", description="Request to spend your bucks for Sgt.Cat to do something")
@@ -209,6 +210,8 @@ def transfer_user_funds(reciever,amount,sender=None):
 
 
     database["users"][str(reciever)]["balance"] += amount # Add money to reciever
+
+    save_database(database)
 
 # Database saving proccess ---------------------------
 def save_database(database, filename=DATABASE_FILE):
