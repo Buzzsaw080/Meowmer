@@ -183,25 +183,7 @@ async def update_leaderboard(): # Loop start
 #TODO: make opponent optional, so you can make a public challenge
 @bot.tree.command(name="coinflip",description="Challenge someone to a coinflip")
 async def requestcoinflip(interaction,stakes:int,opponent:discord.User):
-    check_user_existance(interaction.user.id)
-    check_user_existance(opponent)
-
-    if stakes < 0:
-        await interaction.response.send_message("uhhh... nuh uh", ephemeral=True)
-    elif get_user_balance(interaction.user.id) < stakes:
-        await interaction.response.send_message(f"sorry buddy, i can't hand out loans for gambling, and you only have {get_user_balance(interaction.user.id)}$",ephemeral=True)
-        return
-    elif get_user_balance(opponent.id) < stakes:
-        await interaction.response.send_message(f"your opponent is too broke for the stakes you put, they only have {get_user_balance(opponent.id)}$",ephemeral=True)
-        return
-
-    view = GamblingAcceptor()
-    view.requester = interaction.user
-    view.opponent = opponent
-    view.callback = coinflip
-    view.stakes = stakes
-
-    await interaction.response.send_message(f"<@{opponent.id}>, <@{interaction.user.id}> is challenging you to a coin flip!\nstakes: {stakes}$",view=view)
+    await make_gambling_challenge(interaction,opponent,stakes,"a coin flip",coinflip)
 
 
 # Checking for existence of a user -----------
@@ -216,6 +198,31 @@ def check_user_existance(userid:int):
     database["users"][str(userid)] = {"balance":0}
 
     save_database(database)
+
+async def make_gambling_challenge(interaction,opponent,stakes,name,callback):
+    check_user_existance(interaction.user.id)
+    check_user_existance(opponent.id)
+
+    if stakes < 0: # negative numbers aren't alive (0 stakes are though)
+        await interaction.response.send_message("uhhh... nuh uh", ephemeral=True)
+        return False
+    elif get_user_balance(interaction.user.id) < stakes: # if you can't afford it, dont let you make a challenge
+        await interaction.response.send_message(f"sorry buddy, i can't hand out loans for gambling, and you only have {get_user_balance(interaction.user.id)}$",ephemeral=True)
+        return False
+    elif get_user_balance(opponent.id) < stakes: # if they can't afford it, dont let you make a challenge
+        await interaction.response.send_message(f"your opponent is too broke for the stakes you put, they only have {get_user_balance(opponent.id)}$",ephemeral=True)
+        return False
+
+    view = GamblingAcceptor()
+    view.requester = interaction.user
+    view.opponent = opponent
+    view.callback = coinflip
+    view.stakes = stakes
+
+    await interaction.response.send_message(f"<@{opponent.id}>, <@{interaction.user.id}> is challenging you to {name}!\nstakes: {stakes}$",view=view)
+
+    return True # if the challenge was created, return true
+    # if not, it will return false
 
 def get_user_balance(userid):
     database = read_database()
@@ -304,7 +311,7 @@ class CostSelector(discord.ui.View):
         min_values = 1, 
         max_values = 1, 
         options = [ 
-            discord.SelectOption(label="Free", description="Give it to them for free"), # Fuck i scrolled down and saw that if it wasnt a value it would just be reject. pwetty pwease code dis in buzz uwu x3 *cums*
+            discord.SelectOption(label="Free", description="Give it to them for free"),
             discord.SelectOption(label="1"),
             discord.SelectOption(label="2"),
             discord.SelectOption(label="3"),
