@@ -149,6 +149,7 @@ async def update_leaderboard(): # Loop start
 
     nlist = userlist
     # bro probably did not fix this :skull: and if he did he forgot to remove the messsage
+    # i didnt :( - Buzz
     for passnum in range(len(nlist)-1,0,-1):
         for i in range(passnum):
             if nlist[i][1]>nlist[i+1][1]:
@@ -187,18 +188,20 @@ async def update_leaderboard(): # Loop start
 
 #TODO: make opponent optional, so you can make a public challenge
 @bot.tree.command(name="coinflip",description="Challenge someone to a coinflip")
-async def coinflip(interaction,stakes:int,opponent:discord.User):
-    if get_user_balance(interaction.user.id) < stakes:
+async def requestcoinflip(interaction,stakes:int,opponent:discord.User):
+    if stakes < 0:
+        await interaction.response.send_message("uhhh... nuh uh", ephemeral=True)
+    elif get_user_balance(interaction.user.id) < stakes:
         await interaction.response.send_message(f"sorry buddy, i can't hand out loans for gambling, and you only have {get_user_balance(interaction.user.id)}$",ephemeral=True)
         return
     elif get_user_balance(opponent.id) < stakes:
-        await interaction.response.send_message(f"your opponent is too broke for the stakes you put, they only have {get_user_balance(opponent.id)}")
+        await interaction.response.send_message(f"your opponent is too broke for the stakes you put, they only have {get_user_balance(opponent.id)}$",ephemeral=True)
         return
 
     view = GamblingAcceptor()
     view.requester = interaction.user
     view.opponent = opponent
-    view.gambleName = "coinflip"
+    view.callback = coinflip
     view.stakes = stakes
 
     await interaction.response.send_message(f"<@{opponent.id}>, <@{interaction.user.id}> is challenging you to a coin flip!\nstakes: {stakes}$",view=view)
@@ -260,11 +263,12 @@ def read_database():
 class GamblingAcceptor(discord.ui.View):
     requester = None
     opponent = None
-    gambleName = "undefined"
+    gambleName = "undefined" # unused now, gonna remove later so dont use it
     stakes = 0
+    callback = None
 
     def __init__(self):
-        super().__init__(timeout=30) # make the button last 30 seconds
+        super().__init__()
 
     @discord.ui.button(label="Accept", style=discord.ButtonStyle.green, emoji="💪")
     async def accept_callback(self, interaction, button):
@@ -275,19 +279,18 @@ class GamblingAcceptor(discord.ui.View):
         
         button.disabled = True
 
-        if randint(0,1) == 0:
-            result = f"<@{self.opponent.id}> won! +{self.stakes}$ for <@{self.requester.id}>, -{self.stakes}$ for <@{self.opponent.id}>"
-            transfer_user_funds(self.opponent.id,self.stakes,self.requester.id)
-        else:
-            result = f"<@{self.requester.id}> won! -{self.stakes}$ for <@{self.requester.id}>, +{self.stakes}$ for <@{self.opponent.id}>"
-            transfer_user_funds(self.opponent.id,self.stakes,self.requester.id)
+        await interaction.message.edit(content=f"<@{self.opponent.id}> has accepted the coinflip",view=None)
+        await coinflip(interaction,self.requester,self.opponent,self.stakes)
         
-        result += f"\n<@{self.requester.id}> now has {get_user_balance(self.requester.id)},"
-        result += f"\n<@{self.opponent.id}> now has {get_user_balance(self.opponent.id)}."
+async def coinflip(interaction,requester,opponent,stakes):
+    if randint(0,1) == 0:
+        result = f"<@{opponent.id}> won! +{stakes}$"
+        transfer_user_funds(opponent.id,stakes,requester.id)
+    else:
+        result = f"<@{requester.id}> won! +{stakes}$"
+        transfer_user_funds(requester.id,stakes,opponent.id)
 
-        await interaction.response.send_message(f"<@{self.opponent.id}> accepted the {self.gambleName} and... \n{result}")
-        
-
+    await interaction.response.send_message(result)
 
 # Request command button options. see request command for details
 class CostSelector(discord.ui.View):
