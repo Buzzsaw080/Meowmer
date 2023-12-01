@@ -3,7 +3,6 @@ from discord import app_commands
 import discord
 
 from random import randint
-import asyncio
 import json
 
 CIRCULATION_LIMIT = 100
@@ -58,8 +57,7 @@ async def on_ready():
     print("Syncing bot commands")
     await bot.tree.sync()
 
-    loop = asyncio.get_event_loop()
-    loop.create_task(update_leaderboard())
+    update_leaderboard()
 
     print("All set, sir.")
 # Commands ------------------------------------------------------------------------------------
@@ -179,16 +177,15 @@ async def update_leaderboard(): # Loop start
         message = await channel.send(leaderboard)
         database["leaderboardmessage"] = message.id
         save_database(database)
-    
 
-    await asyncio.sleep(30) # how often the leaderboard updates
-    loop = asyncio.get_event_loop()
-    loop.create_task(update_leaderboard())
 
 
 #TODO: make opponent optional, so you can make a public challenge
 @bot.tree.command(name="coinflip",description="Challenge someone to a coinflip")
 async def requestcoinflip(interaction,stakes:int,opponent:discord.User):
+    check_user_existance(interaction.user.id)
+    check_user_existance(opponent)
+
     if stakes < 0:
         await interaction.response.send_message("uhhh... nuh uh", ephemeral=True)
     elif get_user_balance(interaction.user.id) < stakes:
@@ -234,6 +231,7 @@ def transfer_user_funds(reciever,amount,sender=None):
     database["users"][str(reciever)]["balance"] += amount # Add money to reciever
 
     save_database(database)
+    update_leaderboard()
 
 # Database saving proccess ---------------------------
 def save_database(database, filename=DATABASE_FILE):
@@ -241,6 +239,7 @@ def save_database(database, filename=DATABASE_FILE):
     with open(filename, 'w') as openfile:
         json.dump(database,openfile, indent=3)
     print("Database save complete")
+
 # Database file error -----------------------
 def read_database():
     try:
