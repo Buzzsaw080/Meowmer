@@ -2,7 +2,7 @@ from discord.ext import commands
 from discord import app_commands
 import discord
 
-from random import randint
+from random import randint, choice
 import json
 
 CIRCULATION_LIMIT = 100
@@ -57,7 +57,7 @@ async def on_ready():
     print("Syncing bot commands")
     await bot.tree.sync()
 
-    update_leaderboard()
+    await update_leaderboard()
 
     print("All set, sir.")
 # Commands ------------------------------------------------------------------------------------
@@ -185,6 +185,24 @@ async def update_leaderboard(): # Loop start
 async def requestcoinflip(interaction,stakes:int,opponent:discord.User):
     await make_gambling_challenge(interaction,opponent,stakes,"a coin flip",coinflip)
 
+@bot.tree.command(name="blackjack",description="Challenge someone to blackjack")
+async def requestblackjack(interaction,stakes:int,opponent:discord.User):
+    await make_gambling_challenge(interaction,opponent,stakes,"blackjack",blackjack)
+
+@bot.tree.command(name="blowjob",description="uhh")
+async def blowjob(interaction):
+    check_user_existance(interaction.user.id)
+
+    reactions = ["ohh yeahhh","*moans*","soo goood","yess daddy","😫","keep going bbg"]
+    database = read_database()
+
+    try:
+        database["users"][str(interaction.user.id)]["blowjobs"] += 1
+    except KeyError:
+        database["users"][str(interaction.user.id)]["blowjobs"] = 1
+
+    save_database(database)
+    await interaction.response.send_message(f"{choice(reactions)} (you have given meowmer {database['users'][str(interaction.user.id)]['blowjobs']} blowjobs)")
 
 # Checking for existence of a user -----------
 def check_user_existance(userid:int):
@@ -195,7 +213,7 @@ def check_user_existance(userid:int):
     
     print("New user! creating entry")
 
-    database["users"][str(userid)] = {"balance":0}
+    database["users"][str(userid)] = {"balance":0, "blowjobs":0}
 
     save_database(database)
 
@@ -238,7 +256,6 @@ def transfer_user_funds(reciever,amount,sender=None):
     database["users"][str(reciever)]["balance"] += amount # Add money to reciever
 
     save_database(database)
-    update_leaderboard()
 
 # Database saving proccess ---------------------------
 def save_database(database, filename=DATABASE_FILE):
@@ -276,7 +293,7 @@ class GamblingAcceptor(discord.ui.View):
     def __init__(self):
         super().__init__()
 
-    @discord.ui.button(label="Accept", style=discord.ButtonStyle.green, emoji="💪")
+    @discord.ui.button(label="Accept", style=discord.ButtonStyle.green, emoji="💰")
     async def accept_callback(self, interaction, button):
 
         if interaction.user.id != self.opponent.id:
@@ -297,6 +314,28 @@ async def coinflip(interaction,requester,opponent,stakes):
         transfer_user_funds(requester.id,stakes,opponent.id)
 
     await interaction.response.send_message(result)
+
+async def blackjack(interaction,requester,opponent,stakes):
+    embed = discord.Embed(title="Blackjack", footer=f"Stakes:{stakes}", color=0x00ff00)
+    embed.add_field(name=f"{requester.displayName}'s cards", value="hi", inline=False)
+    embed.add_field(name=f"{opponent.displayName}'s cards", value="hi", inline=False)
+    await interaction.response.send_message("",embed=embed)
+
+class BlackjackGame(discord.ui.View):
+    players = [
+        {
+            "user":None,
+            "cards":[]
+        },
+        
+    ]
+    requester = None
+    opponent = None
+    requestercards = []
+    opponentcards = []
+
+    def __init__(self):
+        super().__init__(timeout=30)
 
 # Request command button options. see request command for details
 class CostSelector(discord.ui.View):
