@@ -234,8 +234,9 @@ async def make_gambling_challenge(interaction,opponent,stakes,name,callback):
     view = GamblingAcceptor()
     view.requester = interaction.user
     view.opponent = opponent
-    view.callback = coinflip
+    view.callback = callback
     view.stakes = stakes
+    view.gambleName = name
 
     await interaction.response.send_message(f"<@{opponent.id}>, <@{interaction.user.id}> is challenging you to {name}!\nstakes: {stakes}$",view=view)
 
@@ -286,7 +287,7 @@ def read_database():
 class GamblingAcceptor(discord.ui.View):
     requester = None
     opponent = None
-    gambleName = "undefined" # unused now, gonna remove later so dont use it
+    gambleName = "undefined"
     stakes = 0
     callback = None
 
@@ -302,8 +303,8 @@ class GamblingAcceptor(discord.ui.View):
         
         button.disabled = True
 
-        await interaction.message.edit(content=f"<@{self.opponent.id}> has accepted the coinflip",view=None)
-        await coinflip(interaction,self.requester,self.opponent,self.stakes)
+        await interaction.response.edit_message(content=f"<@{self.opponent.id}> has accepted the {self.gambleName}",view=None)
+        await self.callback(interaction,self.requester,self.opponent,self.stakes)
         
 async def coinflip(interaction,requester,opponent,stakes):
     if randint(0,1) == 0:
@@ -316,26 +317,71 @@ async def coinflip(interaction,requester,opponent,stakes):
     await interaction.response.send_message(result)
 
 async def blackjack(interaction,requester,opponent,stakes):
-    embed = discord.Embed(title="Blackjack", footer=f"Stakes:{stakes}", color=0x00ff00)
-    embed.add_field(name=f"{requester.displayName}'s cards", value="hi", inline=False)
-    embed.add_field(name=f"{opponent.displayName}'s cards", value="hi", inline=False)
-    await interaction.response.send_message("",embed=embed)
+    game = BlackjackGame()
+
+    game.requester = requester
+    game.opponent = opponent
+
+    game.stakes = stakes
+
+    await game.show_game_summary(interaction)
+
+    
 
 class BlackjackGame(discord.ui.View):
-    players = [
-        {
-            "user":None,
-            "cards":[]
-        },
-        
-    ]
-    requester = None
+    requester = None 
+    requesterDeck = []
+
     opponent = None
-    requestercards = []
-    opponentcards = []
+    opponentDeck = []
+
+
+    turn = 0
+    overviewMessage = None
+    stakes = 0
+    possibleCards = [2,3,4,5,6,7,8,9,10,10,10,10] * 4
 
     def __init__(self):
         super().__init__(timeout=30)
+
+    def give_starting_cards(self):
+        for i in range(1,2):
+            self.requesterDeck += self.draw_card()
+            self.opponentDeck += self.draw_card()
+        
+    def draw_card(self):
+        # choose random value between 0 and the length of the possible cards, then remove it from the
+        # draw pile and return it
+        return self.possibleCards.pop(randint(0,len(self.possibleCards) - 1))
+
+    async def show_game_summary(self,interaction):
+        embed = discord.Embed(title="Blackjack", description=f"{self.requester.display_name}'s turn", color=0xff0000)
+        embed.add_field(name=f"{self.requester.display_name}'s cards", value=str(self.requesterDeck), inline=True)
+        embed.add_field(name="Total", value=":)", inline=False)
+        embed.add_field(name=f"{self.opponent.display_name}'s cards", value=str(self.opponentDeck), inline=False)
+        embed.add_field(name="Total", value=":)", inline=False)
+
+        if self.overviewMessage == None:
+            await interaction.response.send_message("",embed=embed,view=self)
+        else:
+            await interaction.response.edit_message("",embed=embed,view=self)
+
+    @discord.ui.button(label="Hit", style=discord.ButtonStyle.red)
+    async def hit(self, interaction, button):
+        await interaction.response.send_message("You hit!",ephemeral=True)
+        await self.show_game_summary(interaction)
+    
+    @discord.ui.button(label="Stand", style=discord.ButtonStyle.green)
+    async def stand(self, interaction, button):
+        if turn == 0:
+            turn = 1
+            await interaction.response.send_message("You stood. it is now the other player's turn",ephemeral=True)
+        else:
+            await interaction.response.send_message("You stood. getting winner now...",ephemeral=True)
+    
+    @discord.ui.button(label="Show cards", style=discord.ButtonStyle.grey)
+    async def showcards(self, interaction, button):
+        await interaction.response.send_message(f"Your cards: {self.requester.cards}",ephemeral=True)
 
 # Request command button options. see request command for details
 class CostSelector(discord.ui.View):
